@@ -1,38 +1,28 @@
 package main
 
 import (
-	"github.com/gofiber/template/html/v2"
+	"context"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-
-	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
-	// Create a new engine
-	engine := html.New("./views", ".html")
+	mongoURI := "mongodb://localhost:27017/"
 
-	// Or from an embedded system
-	// See github.com/gofiber/embed for examples
-	// engine := html.NewFileSystem(http.Dir("./views", ".html"))
+	// Set up MongoDB client options
+	clientOptions := options.Client().ApplyURI(mongoURI)
 
-	// Pass the engine to the Views
-	app := fiber.New(fiber.Config{
-		Views: engine,
-	})
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.Background(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		// Render index
-		return c.Render("index", fiber.Map{
-			"Title": "Hello, World!",
-		})
-	})
+	// Check the connection
+	err = client.Ping(context.Background(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	app.Get("/layout", func(c *fiber.Ctx) error {
-		// Render index within layouts/main
-		return c.Render("index", fiber.Map{
-			"Title": "Hello, World!",
-		}, "layouts/main")
-	})
-
-	log.Fatal(app.Listen(":3000"))
 }
